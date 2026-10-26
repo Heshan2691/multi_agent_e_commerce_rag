@@ -1,0 +1,161 @@
+﻿{
+    "agentRuntimeId": "",
+    "agentRuntimeArtifact": {
+        "containerConfiguration": {
+            "containerUri": ""
+        },
+        "codeConfiguration": {
+            "code": {
+                "s3": {
+                    "bucket": "",
+                    "prefix": "",
+                    "versionId": ""
+                }
+            },
+            "runtime": "PYTHON_3_10",
+            "entryPoint": [
+                ""
+            ]
+        }
+    },
+    "roleArn": "",
+    "networkConfiguration": {
+        "networkMode": "PUBLIC",
+        "networkModeConfig": {
+            "securityGroups": [
+                ""
+            ],
+            "subnets": [
+                ""
+            ],
+            "requireServiceS3Endpoint": true
+        }
+    },
+    "description": "",
+    "authorizerConfiguration": {
+        "customJWTAuthorizer": {
+            "discoveryUrl": "",
+            "allowedAudience": [
+                ""
+            ],
+            "allowedClients": [
+                ""
+            ],
+            "allowedScopes": [
+                ""
+            ],
+            "advertisedScopeMapping": {
+                "KeyName": ""
+            },
+            "customClaims": [
+                {
+                    "inboundTokenClaimName": "",
+                    "inboundTokenClaimValueType": "STRING",
+                    "authorizingClaimMatchValue": {
+                        "claimMatchValue": {
+                            "matchValueString": "",
+                            "matchValueStringList": [
+                                ""
+                            ]
+                        },
+                        "claimMatchOperator": "EQUALS"
+                    }
+                }
+            ],
+            "privateEndpoint": {
+                "selfManagedLatticeResource": {
+                    "resourceConfigurationIdentifier": ""
+                },
+                "managedVpcResource": {
+                    "vpcIdentifier": "",
+                    "subnetIds": [
+                        ""
+                    ],
+                    "endpointIpAddressType": "IPV4",
+                    "securityGroupIds": [
+                        ""
+                    ],
+                    "tags": {
+                        "KeyName": ""
+                    },
+                    "routingDomain": ""
+                }
+            },
+            "privateEndpointOverrides": [
+                {
+                    "domain": "",
+                    "privateEndpoint": {
+                        "selfManagedLatticeResource": {
+                            "resourceConfigurationIdentifier": ""
+                        },
+                        "managedVpcResource": {
+                            "vpcIdentifier": "",
+                            "subnetIds": [
+                                ""
+                            ],
+                            "endpointIpAddressType": "IPV4",
+                            "securityGroupIds": [
+                                ""
+                            ],
+                            "tags": {
+                                "KeyName": ""
+                            },
+                            "routingDomain": ""
+                        }
+                    }
+                }
+            ],
+            "allowedWorkloadConfiguration": {
+                "hostingEnvironments": [
+                    {
+                        "arn": ""
+                    }
+                ],
+                "workloadIdentities": [
+                    ""
+                ]
+            }
+        }
+    },
+    "requestHeaderConfiguration": {
+        "requestHeaderAllowlist": [
+            ""
+        ]
+    },
+    "protocolConfiguration": {
+        "serverProtocol": "MCP"
+    },
+    "lifecycleConfiguration": {
+        "idleRuntimeSessionTimeout": 0,
+        "maxLifetime": 0
+    },
+    "metadataConfiguration": {
+        "requireMMDSV2": true
+    },
+    "environmentVariables": {
+        "KeyName": ""
+    },
+    "filesystemConfigurations": [
+        {
+            "sessionStorage": {
+                "mountPath": ""
+            },
+            "s3FilesAccessPoint": {
+                "accessPointArn": "",
+                "mountPath": ""
+            },
+            "efsAccessPoint": {
+                "accessPointArn": "",
+                "mountPath": ""
+            },
+            "capacityProviderVolume": {
+                "volumeName": "",
+                "mountPath": ""
+            }
+        }
+    ],
+    "capacityProviderConfiguration": {
+        "capacityProviderArn": ""
+    },
+    "clientToken": ""
+}

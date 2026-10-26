@@ -1,0 +1,5 @@
+{
+  "session_id": "haiku-kbfix-real-order-test-001",
+  "customer_id": "CUST-003",
+  "prompt": "Look up the status of order ORD-40333 for customer CUST-003. Use the order records available to you and report only the verified order status. Do not modify any records."
+}

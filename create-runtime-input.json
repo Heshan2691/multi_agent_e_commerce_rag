@@ -1,0 +1,41 @@
+{
+  "agentRuntimeName": "udacity_agentcore_runtime",
+  "agentRuntimeArtifact": {
+    "codeConfiguration": {
+      "code": {
+        "s3": {
+          "bucket": "udacity-agentcore-policy-docs-024278212493-0f215700",
+          "prefix": "agentcore-artifacts/udacity-agentcore-runtime/agentcore-runtime.zip"
+        }
+      },
+      "runtime": "PYTHON_3_12",
+      "entryPoint": ["main.py"]
+    }
+  },
+  "roleArn": "arn:aws:iam::024278212493:role/udacity-agentcore-agentcore-role",
+  "networkConfiguration": {
+    "networkMode": "PUBLIC"
+  },
+  "protocolConfiguration": {
+    "serverProtocol": "HTTP"
+  },
+  "description": "NovaMart multi-agent customer support runtime",
+  "clientToken": "udacity-agentcore-runtime-20261025-01",
+  "environmentVariables": {
+    "AWS_REGION": "us-east-1",
+    "PROJECT_NAME": "udacity-agentcore",
+    "ACCOUNT_ID": "024278212493",
+    "ORDERS_TABLE": "udacity-agentcore-orders",
+    "CUSTOMERS_TABLE": "udacity-agentcore-customers",
+    "WORKFLOW_STATE_TABLE": "udacity-agentcore-workflow-state",
+    "POLICY_BUCKET": "udacity-agentcore-policy-docs-024278212493-0f215700",
+    "VECTOR_STORE_BUCKET": "udacity-agentcore-vectors-024278212493-0f215700",
+    "AGENTCORE_ROLE_ARN": "arn:aws:iam::024278212493:role/udacity-agentcore-agentcore-role",
+    "AGENT_LOG_GROUP": "/aws/bedrock/agentcore/udacity-agentcore",
+    "RETURNS_KB_ID": "TG6WS9LGZ6",
+    "SHIPPING_KB_ID": "ZPJSVHXAH6",
+    "WARRANTY_KB_ID": "N931OKN5DU",
+    "GUARDRAIL_ID": "sct1jca1k3cl",
+    "GUARDRAIL_VERSION": "1"
+  }
+}

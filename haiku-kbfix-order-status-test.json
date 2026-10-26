@@ -1,0 +1,5 @@
+{
+  "session_id": "haiku-kbfix-order-status-test-001",
+  "customer_id": "anonymous",
+  "prompt": "Explain what information you need to look up an order status. Do not look up any records yet, and do not modify customer or order data."
+}

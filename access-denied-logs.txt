@@ -1,0 +1,21 @@
+﻿{
+    "events": [
+        {
+            "logStreamName": "2026/10/24/[runtime-logs-0828dd45-2452-436c-97dc-c5bfbd62d839]2534459b-b0b3-4ee7-8f39-07a2a2b05fad",
+            "timestamp": 1792868326908,
+            "message": "2026-10-24 18:58:46,908 - strands.event_loop.event_loop - ERROR - exception=<AccessDeniedException> | event loop cycle failed",
+            "ingestionTime": 1792868329035,
+            "eventId": "39982299732891212613935254915345174991731158789499322369"
+        },
+        {
+            "logStreamName": "2026/10/24/[runtime-logs-0828dd45-2452-436c-97dc-c5bfbd62d839]2534459b-b0b3-4ee7-8f39-07a2a2b05fad",
+            "timestamp": 1792868326922,
+aws : 
+At line:2 char:1
++ aws logs filter-log-events `
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+aws: [ERROR]: 'charmap' codec can't encode character '\u2514' in position 4700: character maps to <undefined>
+            "message": 

@@ -1,0 +1,5 @@
+{
+  "session_id": "haiku-kbfix-policy-test-001",
+  "customer_id": "anonymous",
+  "prompt": "What does our shipping policy say about delivery? Use the policy information available to you. Do not look up or modify any customer or order records, and do not invent details if the policy cannot be retrieved."
+}

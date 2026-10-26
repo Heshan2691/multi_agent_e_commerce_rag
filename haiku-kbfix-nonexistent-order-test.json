@@ -1,0 +1,5 @@
+﻿{
+  "session_id": "haiku-kbfix-nonexistent-order-test-001",
+  "customer_id": "CUST-002",
+  "prompt": "Look up order ORD-99999 for customer CUST-002. Verify the order against the actual records. If it does not exist or cannot be verified, clearly say so. Do not invent any order details and do not modify any records."
+}

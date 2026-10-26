@@ -1,0 +1,14 @@
+opentelemetry/instrumentation/celery/__init__.py,sha256=0uWC-fpv2_faQ9ZBml4ZEiNi_kz99EfX_uReR24WcI8,13747
+opentelemetry/instrumentation/celery/__pycache__/__init__.cpython-312.pyc,,
+opentelemetry/instrumentation/celery/__pycache__/package.cpython-312.pyc,,
+opentelemetry/instrumentation/celery/__pycache__/utils.cpython-312.pyc,,
+opentelemetry/instrumentation/celery/__pycache__/version.cpython-312.pyc,,
+opentelemetry/instrumentation/celery/package.py,sha256=Lz4YAQr4dXU2bSuZ8u9etBh9qseUZaCrDzY09sAcUtY,119
+opentelemetry/instrumentation/celery/utils.py,sha256=24mW5X4tYPnyJbjhLq42gC2kROZvWg-voqZwCLSUSeY,8528
+opentelemetry/instrumentation/celery/version.py,sha256=-Rf_XkVgjzBGXkth6rg5g0wlRe89UiHM9N5QtCtYKW0,100
+opentelemetry_instrumentation_celery-0.65b0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+opentelemetry_instrumentation_celery-0.65b0.dist-info/METADATA,sha256=eu1-BrXcjonuvAqA0dK5R9t0QKOsdYDguDhgXneBrzU,1986
+opentelemetry_instrumentation_celery-0.65b0.dist-info/RECORD,,
+opentelemetry_instrumentation_celery-0.65b0.dist-info/WHEEL,sha256=lCkmxWfQsSc9CfIClYeavTdQeEX2toPqufh9gI35EQA,87
+opentelemetry_instrumentation_celery-0.65b0.dist-info/entry_points.txt,sha256=XKfvteOT81flz1R6yw_JK0ABFSsQ-lKr8oZAwHMiXJY,94
+opentelemetry_instrumentation_celery-0.65b0.dist-info/licenses/LICENSE,sha256=xx0jnfkXJvxRnG63LTGOxlggYnIysveWIZ6H3PNdCrQ,11357

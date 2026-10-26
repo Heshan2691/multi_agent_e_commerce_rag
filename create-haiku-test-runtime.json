@@ -1,0 +1,42 @@
+{
+  "agentRuntimeName": "udacity_agentcore_haiku_test",
+  "description": "Isolated test runtime using Haiku for worker agents",
+  "agentRuntimeArtifact": {
+    "codeConfiguration": {
+      "code": {
+        "s3": {
+          "bucket": "udacity-agentcore-policy-docs-024278212493-0f215700",
+          "prefix": "agentcore-artifacts/udacity-agentcore-runtime/haiku-test/agentcore-runtime.zip"
+        }
+      },
+      "runtime": "PYTHON_3_12",
+      "entryPoint": [
+        "main.py"
+      ]
+    }
+  },
+  "roleArn": "arn:aws:iam::024278212493:role/udacity-agentcore-agentcore-role",
+  "networkConfiguration": {
+    "networkMode": "PUBLIC"
+  },
+  "protocolConfiguration": {
+    "serverProtocol": "HTTP"
+  },
+  "environmentVariables": {
+    "ACCOUNT_ID": "024278212493",
+    "AGENTCORE_ROLE_ARN": "arn:aws:iam::024278212493:role/udacity-agentcore-agentcore-role",
+    "AGENT_LOG_GROUP": "/aws/bedrock/agentcore/udacity-agentcore",
+    "AWS_REGION": "us-east-1",
+    "CUSTOMERS_TABLE": "udacity-agentcore-customers",
+    "GUARDRAIL_ID": "sct1jca1k3cl",
+    "GUARDRAIL_VERSION": "1",
+    "ORDERS_TABLE": "udacity-agentcore-orders",
+    "POLICY_BUCKET": "udacity-agentcore-policy-docs-024278212493-0f215700",
+    "PROJECT_NAME": "udacity-agentcore",
+    "RETURNS_KB_ID": "TG6WS9LGZ6",
+    "SHIPPING_KB_ID": "ZPJSVHXAH6",
+    "VECTOR_STORE_BUCKET": "udacity-agentcore-vectors-024278212493-0f215700",
+    "WARRANTY_KB_ID": "N931OKN5DU",
+    "WORKFLOW_STATE_TABLE": "udacity-agentcore-workflow-state"
+  }
+}

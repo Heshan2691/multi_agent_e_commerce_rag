@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# AWS local configuration
+.aws/
+
+# Generated deployment artifacts
+*.zip
+*.bak
+
+# Python test/cache files
+.pytest_cache/git status --short

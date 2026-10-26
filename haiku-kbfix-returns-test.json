@@ -1,0 +1,5 @@
+{
+  "session_id": "haiku-kbfix-returns-test-001",
+  "customer_id": "anonymous",
+  "prompt": "Summarize our returns policy, including the return window and any important conditions. Use the available policy information. Do not access or modify customer or order records. If the policy cannot be retrieved, say so."
+}
