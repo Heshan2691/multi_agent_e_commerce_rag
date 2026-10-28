@@ -12,6 +12,7 @@ __pycache__/
 .aws/
 
 # Generated deployment artifacts
+.agentcore_build/
 *.zip
 *.bak
 
