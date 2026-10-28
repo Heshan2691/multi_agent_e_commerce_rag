@@ -1,4 +1,5 @@
-﻿import json
+﻿
+import json
 import logging
 import os
 import sys
@@ -13,8 +14,9 @@ if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
 from bedrock_agentcore import BedrockAgentCoreApp
+from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
+from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 
-import config
 from agent_orchestrator import (
     build_inventory_agent,
     build_refund_agent,
@@ -27,36 +29,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = BedrockAgentCoreApp()
-_orchestrator = None
 
-
-def get_orchestrator():
-    """Build the NovaMart agent graph once per runtime process."""
-    global _orchestrator
-
-    if _orchestrator is None:
-        logger.info("Initializing NovaMart multi-agent system")
-
-        inventory = build_inventory_agent()
-        refund = build_refund_agent()
-        policy = build_policy_agent()
-        communication = build_communication_agent()
-
-        _orchestrator = build_orchestrator_agent(
-            inventory,
-            refund,
-            policy,
-            communication,
-        )
-
-        logger.info("NovaMart agent graph initialized")
-
-    return _orchestrator
+MEMORY_ID = "udacity_agentcore_memory-0BaJn3FBpI"
 
 
 @app.entrypoint
 def invoke(payload):
-    """Handle a customer-support request sent to AgentCore Runtime."""
     if isinstance(payload, str):
         payload = json.loads(payload)
 
@@ -84,18 +62,45 @@ def invoke(payload):
             "Provide a non-empty user_message, message, or prompt."
         )
 
-    enriched_message = (
-        f"[Session ID: {session_id}] "
-        f"[Customer ID: {customer_id}] "
-        f"{user_message.strip()}"
+    memory_config = AgentCoreMemoryConfig(
+        memory_id=MEMORY_ID,
+        session_id=session_id,
+        actor_id=customer_id,
+        batch_size=1,
+    )
+    memory_manager = AgentCoreMemorySessionManager(
+        memory_config,
+        region_name=os.environ.get("AWS_REGION", "us-east-1"),
     )
 
-    result = str(get_orchestrator()(enriched_message))
+    try:
+        inventory = build_inventory_agent()
+        refund = build_refund_agent()
+        policy = build_policy_agent()
+        communication = build_communication_agent()
 
-    return {
-        "response": result,
-        "session_id": session_id,
-    }
+        orchestrator = build_orchestrator_agent(
+            inventory,
+            refund,
+            policy,
+            communication,
+            session_manager=memory_manager,
+        )
+
+        enriched_message = (
+            f"[Session ID: {session_id}] "
+            f"[Customer ID: {customer_id}] "
+            f"{user_message.strip()}"
+        )
+
+        result = str(orchestrator(enriched_message))
+
+        return {
+            "response": result,
+            "session_id": session_id,
+        }
+    finally:
+        memory_manager.close()
 
 
 if __name__ == "__main__":

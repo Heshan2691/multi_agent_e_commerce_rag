@@ -40,6 +40,10 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from datetime import datetime, timezone
+from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
+from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
+from bedrock_agentcore.memory.integrations.strands.config import AgentCoreMemoryConfig
+from bedrock_agentcore.memory.integrations.strands.session_manager import AgentCoreMemorySessionManager
 
 # Ensure the parent directory is on sys.path so config.py and
 # bedrock_kb_retrieval.py are importable regardless of where this
@@ -127,13 +131,8 @@ def _register_agentcore_compat_methods():
                 }
             }
 
-        def put_agent_runtime_logging_configuration(self, agentRuntimeId,
-                                                    loggingConfiguration=None, **kw):
-            return {'ResponseMetadata': {'HTTPStatusCode': 200}}
-
         class_attributes['get_agent_runtime'] = get_agent_runtime
         class_attributes['get_agent_runtime_logging_configuration'] = get_agent_runtime_logging_configuration
-        class_attributes['put_agent_runtime_logging_configuration'] = put_agent_runtime_logging_configuration
 
     import boto3 as _boto3
     if _boto3.DEFAULT_SESSION is not None:
@@ -347,8 +346,7 @@ def build_inventory_agent() -> Agent:
             logger.exception("Failed to retrieve order")
             return {
                 "success": False,
-                "message": "Unable to retrieve order information.",
-                "error": str(exc),
+                "message": "Unable to retrieve order information. Please try again later.",
             }
 
     @tool
@@ -376,17 +374,20 @@ def build_inventory_agent() -> Agent:
                     "customer_id": customer_id,
                 }
 
+            # Return only fields required by downstream support decisions.
             return {
                 "success": True,
-                "customer": customer,
+                "customer": {
+                    "customer_id": customer.get("customer_id", customer_id),
+                    "tier": customer.get("tier"),
+                },
             }
 
         except Exception as exc:
             logger.exception("Failed to retrieve customer")
             return {
                 "success": False,
-                "message": "Unable to retrieve customer information.",
-                "error": str(exc),
+                "message": "Unable to retrieve customer information. Please try again later.",
             }
 
     @tool
@@ -407,20 +408,30 @@ def build_inventory_agent() -> Agent:
             )
 
             orders = response.get("Items", [])
+            safe_orders = [
+                {
+                    key: order.get(key)
+                    for key in (
+                        "order_id", "status", "delivered_at", "delivery_date",
+                        "estimated_delivery", "created_at", "total", "currency",
+                    )
+                    if key in order
+                }
+                for order in orders
+            ]
 
             return {
                 "success": True,
                 "customer_id": customer_id,
-                "count": len(orders),
-                "orders": orders,
+                "count": len(safe_orders),
+                "orders": safe_orders,
             }
 
         except Exception as exc:
             logger.exception("Failed to list customer orders")
             return {
                 "success": False,
-                "message": "Unable to retrieve customer orders.",
-                "error": str(exc),
+                "message": "Unable to retrieve customer orders. Please try again later.",
             }
 
     return Agent(
@@ -597,20 +608,17 @@ def build_refund_agent() -> Agent:
                     ),
                 }
 
-            # Prefer an actual delivery date if the record has one.
-            # The seeded dataset may only provide estimated_delivery.
-            delivery_date_value = (
-                order.get("delivered_at")
-                or order.get("delivery_date")
-                or order.get("estimated_delivery")
-            )
+            # Return eligibility must use a verified actual delivery date.
+            # An estimate must never be treated as proof that delivery occurred.
+            delivery_date_value = order.get("delivered_at") or order.get("delivery_date")
 
             if not delivery_date_value:
                 return {
                     "success": False,
                     "message": (
-                        "No delivery date is available. "
-                        "Return eligibility cannot be verified."
+                        "A verified actual delivery date is unavailable. "
+                        "Return eligibility cannot be verified; please verify "
+                        "delivery before submitting a return request."
                     ),
                 }
 
@@ -989,6 +997,7 @@ def build_orchestrator_agent(
     refund_agent: Agent,
     policy_agent: Agent,
     communication_agent: Agent,
+    session_manager=None,
 ) -> Agent:
     """
     Build the Orchestrator Agent that routes requests and manages WorkflowState.
@@ -1194,16 +1203,17 @@ def build_orchestrator_agent(
             return f"Unable to initialize the session: {exc}"
 
     return Agent(
-        model=orchestrator_model,
-        system_prompt=system_prompt,
-        tools=[
-            initialize_session,
-            route_to_inventory_agent,
-            route_to_policy_agent,
-            route_to_refund_agent,
-            route_to_communication_agent,
-        ],
-    )
+    model=orchestrator_model,
+    system_prompt=system_prompt,
+    tools=[
+        initialize_session,
+        route_to_inventory_agent,
+        route_to_policy_agent,
+        route_to_refund_agent,
+        route_to_communication_agent,
+    ],
+    session_manager=session_manager,
+)
 
 
 
@@ -1409,82 +1419,37 @@ def deploy_to_agentcore_runtime(
     guardrail_id: str,
     guardrail_version: str
 ) -> str:
-    """
-    Deploy the multi-agent system to Amazon Bedrock AgentCore Runtime.
+    """Return an existing AgentCore Runtime ARN, or fail clearly.
 
-    Note: orchestrator_agent is accepted as a parameter to make the call-site
-    explicit about what is being deployed, but AgentCore does not serialize
-    Python objects directly. Instead, the runtime is configured with the role,
-    network settings, guardrail, and environment variables (KB IDs etc.) it
-    needs. The agent code in this script runs as the MCP server handler inside
-    the AgentCore runtime environment.
-
-    Returns:
-        The AgentCore Runtime ARN
+    This project does not yet package the complete application into a valid
+    AgentCore Runtime artifact. Deliberately do not upload a placeholder ZIP
+    or pretend a runtime was deployed. Existing runtimes can still be reused.
     """
     runtime_name = f"{config.PROJECT_NAME}-runtime".replace('-', '_')
-    s3_client    = boto3.client('s3', region_name=config.AWS_REGION)
 
-    # Check if runtime already exists
     try:
-        existing = agentcore_control.list_agent_runtimes()
-        for r in existing.get('agentRuntimes', []):
-            if r['agentRuntimeName'] == runtime_name:
-                runtime_arn = r['agentRuntimeArn']
+        response = agentcore_control.list_agent_runtimes()
+    except Exception as exc:
+        logger.exception("Unable to list AgentCore runtimes")
+        raise RuntimeError(
+            "Could not check for an existing AgentCore Runtime. Verify AWS "
+            "credentials, region, and bedrock-agentcore permissions."
+        ) from exc
+
+    for runtime in response.get('agentRuntimes', []):
+        if runtime.get('agentRuntimeName') == runtime_name:
+            runtime_arn = runtime.get('agentRuntimeArn')
+            if runtime_arn:
                 print(f"AgentCore Runtime already exists: {runtime_arn}")
                 return runtime_arn
-    except Exception as e:
-        print(f"  [Note] Could not check existing runtimes: {e}")
 
-    sts        = boto3.client('sts', region_name=config.AWS_REGION)
-    account_id = sts.get_caller_identity()['Account']
-    print(f"  AWS Account: {account_id}  |  Region: {config.AWS_REGION}")
-
-    # NOTE: AgentCore API — guardrail injection.
-    # The create_agent_runtime API requires guardrailConfiguration to be
-    # injected via a before-call event hook; it is not an exposed SDK parameter.
-    guardrail_cfg = {
-        'guardrailIdentifier': guardrail_id,
-        'guardrailVersion':    guardrail_version,
-    }
-
-    def _inject_guardrail(params, **kwargs):
-        params['guardrailConfiguration'] = guardrail_cfg
-
-    agentcore_control.meta.events.register(
-        'before-call.bedrock-agentcore-control.CreateAgentRuntime',
-        _inject_guardrail,
+    raise RuntimeError(
+        f"No existing AgentCore Runtime named '{runtime_name}' was found. "
+        "Automatic creation is not implemented: the current source only "
+        "builds a placeholder main.py, which cannot run the multi-agent app. "
+        "Deploy a complete runtime artifact and configure its entry point "
+        "before retrying. No placeholder artifact was uploaded."
     )
-    print(f"  Guardrail hook registered: {guardrail_id} (v{guardrail_version})")
-
-    # NOTE: AgentCore API — S3 artifact requirement.
-    # AgentCore Runtime requires an agentRuntimeArtifact pointing to an S3 object.
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr('main.py', '# NovaMart AgentCore Runtime entry point\n')
-    zip_buffer.seek(0)
-
-    artifact_key = f"agentcore-artifacts/{runtime_name}/deployment.zip"
-    s3_client.put_object(
-        Bucket=config.POLICY_BUCKET,
-        Key=artifact_key,
-        Body=zip_buffer.getvalue(),
-        ContentType='application/zip',
-    )
-    print(f"  Artifact uploaded: s3://{config.POLICY_BUCKET}/{artifact_key}")
-
-    # TODO: Deploy to AgentCore Runtime
-    # Use agentcore_control.create_agent_runtime() with:
-    #   - agentRuntimeName (runtime_name), description, roleArn
-    #   - networkConfiguration (PUBLIC)
-    #   - protocolConfiguration (MCP)
-    #   - agentRuntimeArtifact pointing to the S3 zip uploaded above
-    #     (bucket: config.POLICY_BUCKET, prefix: artifact_key, runtime: PYTHON_3_12)
-    #   - environmentVariables (AWS_REGION, PROJECT_NAME, KB IDs, AGENT_LOG_GROUP)
-    # Note: guardrailConfiguration is injected automatically via the event hook above.
-    # Return: response.get('agentRuntimeArn', response.get('arn', ''))
-
-    pass
 
 
 # ═══════════════════════════════════════════════════════
@@ -1507,14 +1472,7 @@ def configure_memory(runtime_arn: str) -> str:
             print(f"AgentCore Memory already exists: {memory_arn}")
             return memory_arn
 
-    # TODO: Create AgentCore Memory
-    # Use agentcore_control.create_memory() with:
-    #   - name (memory_name), description
-    #   - eventExpiryDuration (7 days)
-    #   - memoryStrategies with summaryMemoryStrategy
-    #   - clientToken for idempotency
-
-        response = agentcore_control.create_memory(
+    response = agentcore_control.create_memory(
         clientToken=str(uuid.uuid4()),
         name=memory_name,
         description="Session-scoped conversational memory for NovaMart.",
@@ -1529,8 +1487,10 @@ def configure_memory(runtime_arn: str) -> str:
         ],
     )
 
-    memory = response.get("memory", {})
-    memory_arn = memory.get("arn")
+    # SDK/API response shapes can differ by version. Accept only an ARN
+    # explicitly returned by the service; never fabricate one.
+    memory = response.get("memory") or response.get("Memory") or response
+    memory_arn = memory.get("arn") or memory.get("memoryArn") or memory.get("memoryARN")
 
     if not memory_arn:
         raise RuntimeError(
@@ -1812,14 +1772,25 @@ def deploy_agentcore_gateway() -> dict:
     ]
 
     print(f"\n  Registering {len(targets)} Gateway targets...")
+    failures = []
     for t in targets:
         try:
             lambda_arn = _gw_get_function_arn(t['function'])
             _gw_create_target(agentcore_ctrl, gateway_id, t, lambda_arn)
-        except Exception as e:
-            print(f"    [Skipped] {t['name']}: {e}")
+        except Exception as exc:
+            logger.exception("Gateway target registration failed: %s", t['name'])
+            failures.append(t['name'])
+            print(f"    [Failed] {t['name']}: check configuration and logs")
 
-    return {'gateway_id': gateway_id, 'gateway_url': gateway_url, 'status': 'CREATING'}
+    status = 'TARGETS_FAILED' if failures else 'TARGETS_SUBMITTED'
+    return {
+        'gateway_id': gateway_id,
+        'gateway_url': gateway_url,
+        'status': status,
+        'failed_targets': failures,
+        'target_count': len(targets),
+        'registered_target_count': len(targets) - len(failures),
+    }
 
 
 # ═══════════════════════════════════════════════════════

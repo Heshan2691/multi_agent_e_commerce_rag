@@ -1,0 +1,17 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:ListEvents",
+        "bedrock-agentcore:CreateEvent",
+        "bedrock-agentcore:GetEvent",
+        "bedrock-agentcore:RetrieveMemoryRecords",
+        "bedrock-agentcore:ListMemoryRecords",
+        "bedrock-agentcore:GetMemoryRecord"
+      ],
+      "Resource": "arn:aws:bedrock-agentcore:us-east-1:024278212493:memory/udacity_agentcore_memory-0BaJn3FBpI"
+    }
+  ]
+}

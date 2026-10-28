@@ -319,32 +319,45 @@ class TestTask3(unittest.TestCase):
 class TestTask4(unittest.TestCase):
 
     def setUp(self):
-        self.agentcore = boto3.client('bedrock-agentcore', region_name=config.AWS_REGION)
+        self.agentcore = boto3.client(
+            "bedrock-agentcore-control",
+            region_name=config.AWS_REGION,
+        )
 
     def test_4_1_memory_is_configured(self):
-        """AgentCore Memory should be enabled on the runtime."""
+        """AgentCore Memory should be active with a summarization strategy."""
         header("Task 4 - Memory")
         try:
-            runtime_arn = config.AGENTCORE_RUNTIME_ARN
-            if not runtime_arn:
-                check(False, 15, "", "AGENTCORE_RUNTIME_ARN not set - complete Task 3 first")
-                return
+            memory_id = "udacity_agentcore_memory-0BaJn3FBpI"
 
-            runtime_id = runtime_arn.split('/')[-1]
-            response = self.agentcore.get_agent_runtime(agentRuntimeId=runtime_id)
+            response = self.agentcore.get_memory(memoryId=memory_id)
+            memory = response.get("memory", {})
 
-            memory_config = response.get('memoryConfiguration', {})
-            memory_enabled = 'SESSION_SUMMARY' in memory_config.get('enabledMemoryTypes', [])
+            active = memory.get("status") == "ACTIVE"
+            strategies = memory.get("strategies", [])
+            summary_enabled = any(
+                strategy.get("type") == "SUMMARIZATION"
+                and strategy.get("status") == "ACTIVE"
+                for strategy in strategies
+            )
+
+            passed = active and summary_enabled
 
             check(
-                memory_enabled,
+                passed,
                 15,
-                "AgentCore Memory is enabled (SESSION_SUMMARY type)",
-                "AgentCore Memory is not enabled on the runtime",
-                f"Found memoryConfiguration: {memory_config}"
+                "AgentCore Memory is active with an active summarization strategy",
+                "AgentCore Memory is not correctly configured",
+                f"Memory status: {memory.get('status')}; strategies: {strategies}",
             )
         except Exception as e:
-            check(False, 15, "", "Error checking memory configuration", str(e))
+            check(
+                False,
+                15,
+                "",
+                "Error checking AgentCore Memory configuration",
+                str(e),
+            )
 
 
 # ═══════════════════════════════════════════════════════
